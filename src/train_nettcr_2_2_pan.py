@@ -121,7 +121,7 @@ def make_tf_ds(df, encoding):
 def my_numpy_function(y_true, y_pred):
     """Implementation of AUC 0.1 metric for Tensorflow"""
     try:
-        auc = roc_auc_score(y_true, y_pred, max_fpr = 0.1)
+        auc = roc_auc_score(y_true, y_pred,)
     except ValueError:
         auc = np.array([float(0)])
     return auc
