@@ -206,8 +206,8 @@ class DataGenerator(tf.keras.utils.Sequence):
         input_dict = {name: inp for name, inp in zip(self.inp_names, encoded_inputs)}
         input_dict['pep'] = input_dict['pep'] / 5
         '''
-        hdf5_indices = batch_df['new_index'].values  # 从 original_index 获取实际索引
-        sorted_hdf5_indices = np.sort(hdf5_indices)  # HDF5 要求索引是递增的
+        hdf5_indices = batch_df['new_index'].values  # from original_index get true index
+        sorted_hdf5_indices = np.sort(hdf5_indices)  # hdf5 require increasing index
 
         '''
         input_dict = {name: np.zeros((len(batch_indices), self.max_seq_lens[name],
