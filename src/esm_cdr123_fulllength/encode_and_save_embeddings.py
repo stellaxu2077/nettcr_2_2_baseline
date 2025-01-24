@@ -8,36 +8,36 @@ import esm
 import argparse
 import h5py
 
-# 导入 keras_utils.py 中的函数和字典
+
 import keras_utils
 
 def get_tensor_name(row):
-    """根据 DataFrame 行生成唯一的 tensor 文件名。"""
+    """ generate unique file name """
     #return str(row['original_index'])
     return str(row['new_index'])
 
 def get_name_from_cdrs(row):
-    """根据 DataFrame 中的 CDR 信息生成唯一的 TCR 名称。"""
+    """ generate unique cdr name """
     return keras_utils.get_name_from_cdrs(row)
 
 def encode_and_save_hdf5(df, tensor_dir, hdf5_path, blosum, model_name="esm2_t33_650M_UR50D"):
     """
-    对 DataFrame 中的每一行进行编码，并保存为 .npy 文件。
+    encode each row in the DataFrame and save as .hdf5 file
     
-    - 对 peptide 使用 blosum 编码，
-    - 对 TRA 和 TRB 使用 ESM2 编码，
-    - 提取 CDR 区域的 embeddings，
-    - 填充到 max_seq_lens，
-    - 保存为 .npy 文件。
+    - for peptide use blosum encoding
+    - for TRA and TRB use ESM2 encoding
+    - extract CDR region embeddings
+    - padding to max_seq_lens，
+    - save as h5
     """
-    # 初始化 ESM2 模型
+    # initialize models
     print("Loading ESM2 model...")
     model, alphabet = getattr(esm.pretrained, f'{model_name}')()
     model.eval()
     batch_converter = alphabet.get_batch_converter()
     print("ESM2 model loaded.")
 
-    # 定义 CDR 名称和对应的最大长度
+    # define cdrs
     cdr_names = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3']
     max_seq_lens = {'A1':7, 'A2':8, 'A3':22, 'B1':6, 'B2':7, 'B3':23}
     peptide_max_len = 12
@@ -46,12 +46,12 @@ def encode_and_save_hdf5(df, tensor_dir, hdf5_path, blosum, model_name="esm2_t33
     total_samples = len(df)
 
     with h5py.File(hdf5_path, 'w') as hdf5_file:
-        # 创建数据集
+
         for cdr in cdr_names:
             hdf5_file.create_dataset(cdr, shape=(total_samples, max_seq_lens[cdr], 1280), dtype='float32')
         hdf5_file.create_dataset('peptide', shape=(total_samples, peptide_max_len, blosum_dim), dtype='float32')
         
-        # 创建标签和权重数据集
+
         hdf5_file.create_dataset('binder', data=df['binder'].values, dtype='int64')
         #hdf5_file.create_dataset('sample_weight', data=df['sample_weight'].values, dtype='float32')
         hdf5_file.create_dataset('partition', data=df['partition'].values, dtype='int64')
@@ -61,7 +61,7 @@ def encode_and_save_hdf5(df, tensor_dir, hdf5_path, blosum, model_name="esm2_t33
             tensor_name = get_tensor_name(row)
             tcr_name = get_name_from_cdrs(row)
             
-            # 编码 peptide 使用 BLOSUM
+            # encode pep
             peptide_seq = row_dict['peptide']
             peptide_encoding = keras_utils.enc_list_bl_max_len(
                 [peptide_seq],
@@ -70,7 +70,7 @@ def encode_and_save_hdf5(df, tensor_dir, hdf5_path, blosum, model_name="esm2_t33
                 padding='right'
             )[0]  # Shape: (12, 20)
             
-            # 编码 TRA_aa 和 TRB_aa 使用 ESM2
+            # encode tra / trb
             sequences = [
                 (tensor_name, row_dict['TRA_aa']),
                 (tensor_name, row_dict['TRB_aa'])
@@ -81,11 +81,11 @@ def encode_and_save_hdf5(df, tensor_dir, hdf5_path, blosum, model_name="esm2_t33
                 results = model(batch_tokens, repr_layers=[model.num_layers])
             token_representations = results["representations"][model.num_layers].cpu().numpy()  # Shape: (2, seq_len, 1280)
             
-            # 获取 TRA 和 TRB 的完整 embeddings
+            # get full seq embeddings
             tra_embedding_full = token_representations[0]  # (seq_len, 1280)
             trb_embedding_full = token_representations[1]  # (seq_len, 1280)
             
-            # 提取并填充 CDR 区域
+            # extract and pad cdrs
             embeddings = {}
             for cdr in cdr_names[:3]:  # TRA CDRs: A1, A2, A3
                 start = int(row_dict.get(f'{cdr}_start', 0))
@@ -123,10 +123,9 @@ def encode_and_save_hdf5(df, tensor_dir, hdf5_path, blosum, model_name="esm2_t33
                     # Invalid indices, pad with -5
                     embeddings[cdr] = np.full((max_len, trb_embedding_full.shape[1]), -5, dtype=np.float32)
             
-            # 将 peptide 的 BLOSUM 编码添加到 embeddings
             embeddings['peptide'] = peptide_encoding  # (12, 20)
             
-            # 保存为 .npy 文件
+            # save data
             '''
             esm_embedding_dir = os.path.join(tensor_dir, "esm_embeddings_train")
             os.makedirs(esm_embedding_dir, exist_ok=True)
@@ -136,7 +135,6 @@ def encode_and_save_hdf5(df, tensor_dir, hdf5_path, blosum, model_name="esm2_t33
                 hdf5_file[cdr][idx] = embeddings[cdr]
             hdf5_file['peptide'][idx] = embeddings['peptide']
 
-            # 打印进度
             if (idx + 1) % 100 == 0 or (idx + 1) == total_samples:
                 print(f"Processed {idx + 1} / {total_samples} samples.")
 
@@ -148,12 +146,12 @@ def main():
     parser.add_argument('-h5', '--hdf5_path', required=True, type=str, help='Path to save the HDF5 file')
     args = parser.parse_args()
     
-    # 读取数据
+    # read data
     print("Reading training data...")
     data = pd.read_csv(args.train_file)
     print(f"Total samples: {len(data)}")
     
-    # 确保 `original_index` 列存在
+    # check `original_index` col exist
     '''
     if 'original_index' not in data.columns:
         print("`original_index` column not found. Resetting index and renaming to `original_index`.")
@@ -166,10 +164,10 @@ def main():
         data.rename(columns={'index': 'new_index'}, inplace=True)
 
 
-    # 定义 BLOSUM 字典
-    blosum = keras_utils.blosum62_20aa  # 从 keras_utils.py 中获取
+    # define BLOSUM dict
+    blosum = keras_utils.blosum62_20aa  # from keras_utils.py 
     
-    # 编码并保存
+    # encode and save
     print("Starting encoding and saving...")
     encode_and_save_hdf5(data, args.tensor_dir, args.hdf5_path, blosum, model_name="esm2_t33_650M_UR50D")
     print("Encoding and saving completed.")
