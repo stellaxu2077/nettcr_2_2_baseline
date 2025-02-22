@@ -1,0 +1,32 @@
+# ESM2 - 33 hidden layers
+# Normalisation divisor of 10 for TCR
+# Sigmoid activation function for TCR
+# Twice the amount of convolution filters and hidden units
+default:
+    model_index: '4'
+    model_architecture_name: CNN_CDR123_global_max
+    patience: 100
+    start_from_epoch: 200 #500
+    dropout_rate: 0.6
+    epochs: 500 #2000
+    batch_size: 64
+    weight_peptides: True
+    embedder_index_tcr: '04'
+    embedder_index_peptide: '01'
+    embedder_index_cdr3: '01'
+    padding_value_peptide: -5
+    padding_side_peptide: right
+    truncating_side_peptide: right
+    padding_value_tcr: 0
+    padding_side_tcr: right
+    truncating_side_tcr: right
+    peptide_selection: null
+    peptide_normalization_divisor: 5
+    tcr_normalization_divisor: 10
+    cdr3_normalization_divisor: 10
+    learning_rate: 0.0005
+    convolution_filters_count: 32
+    hidden_units_count: 128
+    mixed_precision: False
+    pep_conv_activation: relu
+    cdr_conv_activation: sigmoid

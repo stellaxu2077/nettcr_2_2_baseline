@@ -1,0 +1,6 @@
+default:
+    embedder_index_tcr: '02'
+    embedder_name_tcr: facebook/esm2_t33_650M_UR50D
+    embedder_source_tcr: hugging_face
+    embedder_batch_size_tcr: 50
+    embedder_backend_tcr: tf

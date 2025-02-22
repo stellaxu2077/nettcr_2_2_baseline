@@ -1,0 +1,5 @@
+default:
+    embedder_index_peptide: '01'
+    embedder_name_peptide: blosum50_20aa
+    embedder_source_peptide: in-house
+    embedder_batch_size_peptide: null

@@ -1,0 +1,6 @@
+default:
+    embedder_index_cdr3: '01'
+    embedder_name_cdr3: wukevin/tcr-bert-mlm-only
+    embedder_source_cdr3: hugging_face
+    embedder_batch_size_cdr3: 6353
+    embedder_backend_cdr3: pt

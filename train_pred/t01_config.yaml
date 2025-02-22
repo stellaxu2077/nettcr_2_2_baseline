@@ -1,0 +1,6 @@
+default:
+    embedder_index_tcr: '01'
+    embedder_name_tcr: blosum50_20aa
+    embedder_source_tcr: in-house
+    embedder_batch_size_tcr: null
+    embedder_backend_tcr: null

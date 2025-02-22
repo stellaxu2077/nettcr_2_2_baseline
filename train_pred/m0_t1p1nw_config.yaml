@@ -1,0 +1,28 @@
+# This config uses the original paramters from Mathias Jensen
+default:
+    model_index: '0'
+    model_architecture_name: CNN_CDR123_global_max
+    patience: 50
+    start_from_epoch: 0
+    dropout_rate: 0.6
+    epochs: 200 #1000
+    batch_size: 64
+    weight_peptides: False
+    embedder_index_tcr: '01'
+    embedder_index_peptide: '01'
+    embedder_index_cdr3: null
+    padding_value_peptide: -5
+    padding_side_peptide: right
+    truncating_side_peptide: right
+    padding_value_tcr: -5
+    padding_side_tcr: right
+    truncating_side_tcr: right
+    peptide_normalization_divisor: 5
+    tcr_normalization_divisor: 5
+    cdr3_normalization_divisor: 5
+    learning_rate: 0.001
+    convolution_filters_count: 16
+    hidden_units_count: 64
+    mixed_precision: False
+    pep_conv_activation: relu
+    cdr_conv_activation: relu
